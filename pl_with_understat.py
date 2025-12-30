@@ -13,7 +13,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 LEAGUE = "EPL"
-SEASONS = list(range(2020, 2025))          # match your cache seasons
+SEASONS = list(range(2020, 2025))          
 FOOTBALL_FILES = {s: f"E{s}.csv" for s in SEASONS}
 
 CACHE_DIR = Path("understat_cache")
@@ -535,4 +535,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
