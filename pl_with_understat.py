@@ -12,48 +12,38 @@ from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-# =========================
-# CONFIG
-# =========================
 LEAGUE = "EPL"
 SEASONS = list(range(2020, 2025))          # match your cache seasons
 FOOTBALL_FILES = {s: f"E{s}.csv" for s in SEASONS}
 
 CACHE_DIR = Path("understat_cache")
 
-# Rolling training (within-season)
 MIN_TRAIN_MATCHES = 160
 RETRAIN_EVERY = 15
 HALF_LIFE_DAYS = 60
 
-# Ensemble uncertainty (keep small for speed)
 N_MODELS = 15
 MODEL_SEED = 42
 P_LOW_Q = 0.10
 
-# Betting rules
 EXCLUDE_PREFIXES = {"Avg", "AvgC", "Max", "MaxC", "1XB", "1XBC"}
 MIN_P_LOW = 0.18
 EV_LOW_THRESHOLD = 0.03
 STAKE = 1.0
 
-# Rolling windows (leak-free)
 WIN_FORM = 5
 WIN_SHOTS = 8
 
 OUTCOMES = ["H", "D", "A"]
 LABEL_MAP = {"H": 0, "D": 1, "A": 2}
 
-# Probability safety
 P_CLIP_LOW = 0.01
 P_CLIP_HIGH = 0.98
 
-# Shot parsing
-SOT_RESULTS = {"Goal", "SavedShot"}  # proxy on-target
+SOT_RESULTS = {"Goal", "SavedShot"} 
 SETPIECE_SITUATIONS = {"FromCorner", "DirectFreekick", "SetPiece"}
 PENALTY_SITUATION = "Penalty"
 
-# Which shot-derived keys to use in rolling form
 SHOT_KEYS = [
     "shots", "sot_rate",
     "npxg_sum", "xg_per_shot",
@@ -62,9 +52,6 @@ SHOT_KEYS = [
     "late_xg",
 ]
 
-# =========================
-# UTIL
-# =========================
 def safe_float(x) -> float:
     try:
         v = float(x)
@@ -162,9 +149,6 @@ def time_decay_weights(train_dates: np.ndarray, ref_date: np.datetime64, half_li
     return np.exp(-lam * age_days)
 
 
-# =========================
-# UNDERSTAT SHOTS -> MATCH FEATURES
-# =========================
 def agg_side(shots_list: List[dict]) -> Dict[str, float]:
     shots = len(shots_list)
 
@@ -172,11 +156,11 @@ def agg_side(shots_list: List[dict]) -> Dict[str, float]:
     npxg_sum = 0.0
     sots = 0
 
-    big = 0        # xG >= 0.10
-    vbig = 0       # xG >= 0.30
-    box_shots = 0  # X >= 0.83
+    big = 0        
+    vbig = 0       
+    box_shots = 0  
     setpiece_shots = 0
-    late_xg = 0.0  # minute >= 75
+    late_xg = 0.0 
 
     for s in shots_list:
         xg = safe_float(s.get("xG", 0.0))
@@ -311,9 +295,7 @@ def attach_shot_features(season_df: pd.DataFrame, us_index: pd.DataFrame) -> pd.
     return out
 
 
-# =========================
-# LEAK-FREE ROLLING FEATURES
-# =========================
+
 def add_rolling_team_form(df: pd.DataFrame) -> pd.DataFrame:
     teams = pd.unique(df[["HomeTeamN", "AwayTeamN"]].values.ravel())
     hist = {t: [] for t in teams}
@@ -361,9 +343,7 @@ def add_rolling_team_form(df: pd.DataFrame) -> pd.DataFrame:
     return pd.concat([df, pd.DataFrame(rows, index=df.index)], axis=1)
 
 
-# =========================
-# MODEL
-# =========================
+
 def make_model(seed: int):
     return Pipeline([
         ("scaler", StandardScaler()),
@@ -390,9 +370,7 @@ def fit_ensemble(X, y, sw, n_models: int, seed: int):
     return models
 
 
-# =========================
-# SEASON BACKTEST
-# =========================
+
 def load_football_season(season: int) -> pd.DataFrame:
     f = FOOTBALL_FILES[season]
     if not os.path.exists(f):
@@ -557,3 +535,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
